@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpc.h"
+#include <math.h>
 
 // If we are compiling on Windows compile these functions
 #ifdef _WIN32
@@ -17,6 +18,87 @@ char* readline(char* prompt){
     strcpy(cpy, buffer);
     cpy[strlen(cpy)-1] = '\0';
     return cpy;
+}
+
+int number_of_nodes(mpc_ast_t* t){
+    if(t->children_num == 0) {return 1;}
+    if(t->children_num >= 1){
+        int total = 1;
+        for(int i=0; i<t->children_num; i++){
+            total = total + number_of_nodes(t->children[i]);
+        }
+        return total;
+    }
+    return 0;
+}
+
+// for minimum numbers
+long minNum(long numArr[], int size){
+    if(size <= 0){
+        return 0; // return 0 if the array is empty
+    }
+    long min = numArr[0];
+    for(int i = 1; i< size; i++){
+        if(numArr[i] < min){
+            min = numArr[i];
+        }
+    }
+    return min;
+}
+
+// for maximum number
+long maxNum(long numArr[], int size) {
+    if (size <= 0) {
+        return 0; // Return 0 if the array is empty
+    }
+    long max = numArr[0];
+    for (int i = 1; i < size; i++) {
+        if (numArr[i] > max) {
+            max = numArr[i];
+        }
+    }
+    return max;
+}
+
+// use operator string to see which operation to perform
+long eval_op(long x, char* op, long y){
+    if(strcmp(op, "+") == 0) {return x + y;}
+    if(strcmp(op, "-")==0) {return x - y;}
+    if(strcmp(op, "*")==0) {return x * y;}
+    if(strcmp(op, "/")==0) {return x / y;}
+    if(strcmp(op, "%")==0) {return x % y;}
+    if(strcmp(op, "^")==0) {return pow(x, y);}
+    if(strcmp(op, "min")==0){
+        long numArr[] = {x ,y};
+        return minNum(numArr, 2);
+    }
+    if(strcmp(op, "max") == 0){
+        long numArr[] = {x, y};
+        return maxNum(numArr, 2);
+    }
+    return 0;
+}
+
+
+
+long eval(mpc_ast_t* t){
+    // if tagged as number return it directly. 
+    if(strstr(t->tag, "number")){
+        return atoi(t->contents);
+    }
+    // the operator is always second child.
+    char* op= t->children[1] -> contents;
+
+    // we store the third child in 'x'
+    long x = eval(t->children[2]);
+    
+    // Iterate the remaining children and combining
+    int i = 3;
+    while (strstr(t->children[i]->tag, "expr")){
+        x = eval_op(x, op, eval(t->children[i]));
+        i++;
+    }
+    return x;
 }
 
 // fake add_history function
@@ -40,7 +122,7 @@ int main(int argc, char** argv){
     mpca_lang(MPCA_LANG_DEFAULT, 
     "                       \
     number : /-?[0-9]+(\\.[0-9]+)?/ ;   \
-    operator : '+' | '-' | '*' | '/' | '%' ; \
+    operator : '+' | '-' | '*' | '/' | '%' | '^' | \"min\" | \"max\" ; \
     expr : <number> | '(' <operator> <expr>+ ')' ; \
     lispy : /^/ <operator> <expr>+ /$/ ; \
     ", Number, Operator, Expr, Lispy);
@@ -60,8 +142,24 @@ int main(int argc, char** argv){
         // attempt to Parse the user Input
         mpc_result_t r;
         if(mpc_parse("<stdin>", input, Lispy, &r)){
-            mpc_ast_print(r.output);
+            // // load AST from output
+            // mpc_ast_t* a = r.output;
+            // printf("Tag: %s\n", a->tag);
+            // printf("Content: %s\n", a->contents);
+            // printf("Number of children: %i\n", a->children_num);
+
+            // // get First Child
+            // mpc_ast_t* c0 = a->children[0];
+            // printf("First Child Tag: %s\n",c0->tag);
+            // printf("First Child Contents: %s\n", c0->contents);
+            // printf("First Child Number of Children: %i\n", c0->children_num);
+            // mpc_ast_print(a);
+            // mpc_ast_delete(a);
+
+            long result = eval(r.output);
+            printf("%li\n", result);
             mpc_ast_delete(r.output);
+
         }else {
             // otherwise print the Error
             mpc_err_print(r.error);
