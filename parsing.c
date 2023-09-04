@@ -32,34 +32,6 @@ int number_of_nodes(mpc_ast_t* t){
     return 0;
 }
 
-// for minimum numbers
-long minNum(long numArr[], int size){
-    if(size <= 0){
-        return 0; // return 0 if the array is empty
-    }
-    long min = numArr[0];
-    for(int i = 1; i< size; i++){
-        if(numArr[i] < min){
-            min = numArr[i];
-        }
-    }
-    return min;
-}
-
-// for maximum number
-long maxNum(long numArr[], int size) {
-    if (size <= 0) {
-        return 0; // Return 0 if the array is empty
-    }
-    long max = numArr[0];
-    for (int i = 1; i < size; i++) {
-        if (numArr[i] > max) {
-            max = numArr[i];
-        }
-    }
-    return max;
-}
-
 // use operator string to see which operation to perform
 long eval_op(long x, char* op, long y){
     if(strcmp(op, "+") == 0) {return x + y;}
@@ -68,14 +40,8 @@ long eval_op(long x, char* op, long y){
     if(strcmp(op, "/")==0) {return x / y;}
     if(strcmp(op, "%")==0) {return x % y;}
     if(strcmp(op, "^")==0) {return pow(x, y);}
-    if(strcmp(op, "min")==0){
-        long numArr[] = {x ,y};
-        return minNum(numArr, 2);
-    }
-    if(strcmp(op, "max") == 0){
-        long numArr[] = {x, y};
-        return maxNum(numArr, 2);
-    }
+    if(strcmp(op, "min")==0){return x < y ? x : y;}
+    if(strcmp(op, "max") == 0){return x > y ? x : y;}
     return 0;
 }
 
